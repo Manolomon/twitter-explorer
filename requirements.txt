@@ -3,4 +3,4 @@ tweepy
 pandas
 json-lines
 python-igraph
-louvain
+git+https://github.com/vtraag/louvain-igraph.git@0.6.1

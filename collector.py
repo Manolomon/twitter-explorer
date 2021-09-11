@@ -102,8 +102,8 @@ datadir = "./data"
 if not os.path.exists(datadir):
     os.makedirs(datadir)
 
-datetoday = datetime.date.today()
-datelastweek = datetoday - datetime.timedelta(weeks=1)
+datetoday = datetime.date(2021,1,1) #datetime.date.today()
+datelastweek = datetime.date(2019,1,1)
 count = 0
 advanced = st.checkbox("Advanced API settings")
 if advanced:
