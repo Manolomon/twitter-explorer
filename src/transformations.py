@@ -75,7 +75,8 @@ def retweetnetwork(filename,
             if 'retweeted_status' in tweet:
                 
                 time = tweet["created_at"]
-                time = datetime.strptime(time,'%a %b %d %X %z %Y')
+                #time = datetime.strptime(time,"%Y-%m-%dT%H:%M:%S%z")
+                time = datetime.now()
                 time_date = time.date()
 
                 if starttime <= time_date <= endtime:
@@ -85,10 +86,16 @@ def retweetnetwork(filename,
                     try:
                         nodesdict[f"{name}"]["followers"] = tweet["user"]["followers_count"]
                         nodesdict[f"{name}"]["friends"] = tweet["user"]["friends_count"]
+                        nodesdict[f"{name}"]["positive"] = 1 if tweet["sentiment"]["sentiment"] == "POS" else 0
+                        nodesdict[f"{name}"]["neutral"] = 1 if tweet["sentiment"]["sentiment"] == "NEU" else 0
+                        nodesdict[f"{name}"]["negative"] = 1 if tweet["sentiment"]["sentiment"] == "NEG" else 0
                     except KeyError:
                         nodesdict[f"{name}"] = {}
                         nodesdict[f"{name}"]["followers"] = tweet["user"]["followers_count"]
                         nodesdict[f"{name}"]["friends"] = tweet["user"]["friends_count"]
+                        nodesdict[f"{name}"]["positive"] = 1 if tweet["sentiment"]["sentiment"] == "POS" else 0
+                        nodesdict[f"{name}"]["neutral"] = 1 if tweet["sentiment"]["sentiment"] == "NEU" else 0
+                        nodesdict[f"{name}"]["negative"] = 1 if tweet["sentiment"]["sentiment"] == "NEG" else 0
                     try:
                         nodesdict[f"{name}"]["tweets"].append(tweet["id_str"])
                     except KeyError:
@@ -100,10 +107,17 @@ def retweetnetwork(filename,
                     try:
                         nodesdict[f"{name}"]["followers"] = tweet['retweeted_status']["user"]["followers_count"]
                         nodesdict[f"{name}"]["friends"] = tweet['retweeted_status']["user"]["friends_count"]
+                        nodesdict[f"{name}"]["positive"] = 1 if tweet['retweeted_status']["sentiment"]["sentiment"] == "POS" else 0
+                        nodesdict[f"{name}"]["neutral"] = 1 if tweet['retweeted_status']["sentiment"]["sentiment"] == "NEU" else 0
+                        nodesdict[f"{name}"]["negative"] = 1 if tweet['retweeted_status']["sentiment"]["sentiment"] == "NEG" else 0
+
                     except KeyError:
                         nodesdict[f"{name}"] = {}
                         nodesdict[f"{name}"]["followers"] = tweet['retweeted_status']["user"]["followers_count"]
                         nodesdict[f"{name}"]["friends"] = tweet['retweeted_status']["user"]["followers_count"]
+                        nodesdict[f"{name}"]["positive"] = 1 if tweet['retweeted_status']["sentiment"]["sentiment"] == "POS" else 0
+                        nodesdict[f"{name}"]["neutral"] = 1 if tweet['retweeted_status']["sentiment"]["sentiment"] == "NEU" else 0
+                        nodesdict[f"{name}"]["negative"] = 1 if tweet['retweeted_status']["sentiment"]["sentiment"] == "NEG" else 0
                     try:
                         nodesdict[f"{name}"]["tweets"].append(tweet['retweeted_status']["id_str"])
                     except KeyError:
@@ -129,6 +143,9 @@ def retweetnetwork(filename,
         name = v['name']
         v['followers'] = nodesdict[name]['followers']
         v['friends'] = nodesdict[name]['friends']
+        v['positive'] = nodesdict[name]['positive']
+        v['neutral'] = nodesdict[name]['neutral']
+        v['negative'] = nodesdict[name]['negative']
         v['tweets'] = list(set(nodesdict[name]['tweets']))
     
     #print("Running giant component and aggregations...")
@@ -274,6 +291,9 @@ def d3_cg_rtn(G):
         ndict["name"] = f"Community {name + 1}"
         ndict["followers"] = int(v["followers"])
         ndict["friends"] = int(v["friends"])
+        ndict["positive"] = int(v["positive"])
+        ndict["neutral"] = int(v["neutral"])
+        ndict["negative"] = int(v["negative"])
         ndict["N"] = int(v["weight"])
         ndict["in_degree"] = G.degree(v, mode='in')
         ndict["out_degree"] = G.degree(v, mode='out')
@@ -464,7 +484,10 @@ def compute_louvain(G):
     partition = louvain.find_partition(G, louvain.ModularityVertexPartition)        
     clustergraph = partition.cluster_graph(combine_vertices=dict(weight="sum", 
                                                           followers="sum", 
-                                                          friends="sum"),
+                                                          friends="sum",
+                                                          positive="sum",
+                                                          neutral="sum",
+                                                          negative="sum",),
                                          combine_edges=dict(weight=sum))
     del G.vs['weight']
     del G.es['weight']
